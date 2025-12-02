@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyseur de Sentiments - Réseaux Sociaux</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1><i class="fas fa-chart-line"></i> Analyseur de Sentiments</h1>
+                <p class="subtitle">Analysez les tendances et sentiments sur Reddit et Twitter</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Search Section -->
+            <section class="search-section">
+                <div class="card">
+                    <h2><i class="fas fa-search"></i> Rechercher un produit ou sujet</h2>
+                    <form id="searchForm" class="search-form">
+                        <div class="form-group">
+                            <label for="keyword">Mot-clé ou produit</label>
+                            <input 
+                                type="text" 
+                                id="keyword" 
+                                name="keyword" 
+                                placeholder="Ex: iPhone 15, Tesla, ChatGPT..." 
+                                required
+                            >
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Plateformes</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="platform" value="reddit" checked>
+                                        <i class="fab fa-reddit"></i> Reddit
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="platform" value="twitter" checked>
+                                        <i class="fab fa-twitter"></i> Twitter
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="timeFilter">Période</label>
+                                <select id="timeFilter" name="timeFilter">
+                                    <option value="day">Dernières 24h</option>
+                                    <option value="week" selected>Dernière semaine</option>
+                                    <option value="month">Dernier mois</option>
+                                    <option value="year">Dernière année</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="limit">Nombre de posts</label>
+                                <input type="number" id="limit" name="limit" value="10" min="5" max="50">
+                            </div>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary" id="searchBtn">
+                                <i class="fas fa-search"></i> Analyser les avis
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="trendsBtn" style="display: inline-block;">
+                                <i class="fas fa-chart-line"></i> Analyser les tendances
+                            </button>
+                            <button type="button" class="btn btn-llm" id="llmInsightBtn" style="display: inline-block;">
+                                <i class="fas fa-brain"></i> Résumé LLM
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyse en cours... Cela peut prendre quelques instants.</p>
+            </div>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <!-- Overall Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon positive">
+                            <i class="fas fa-smile"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="positiveCount">0%</h3>
+                            <p>Positif</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon neutral">
+                            <i class="fas fa-meh"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="neutralCount">0%</h3>
+                            <p>Neutre</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon negative">
+                            <i class="fas fa-frown"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="negativeCount">0%</h3>
+                            <p>Négatif</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon info">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalPosts">0</h3>
+                            <p>Posts analysés</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✨ NEW: Enhanced Filtering Stats Section with Review Filtering -->
+                <div id="filteringStatsSection" class="card filtering-stats" style="display: none;">
+                    <h3><i class="fas fa-filter"></i> Filtrage Qualité IA</h3>
+                    <p class="filter-info">
+                        <i class="fas fa-info-circle"></i> Seuls les vrais avis (retours d'expérience) sont analysés. 
+                        Les questions, photos et posts non-informatifs sont automatiquement filtrés.
+                    </p>
+                    <div class="filter-stats-grid">
+                        <div class="filter-stat">
+                            <span class="filter-label">Posts trouvés :</span>
+                            <span id="filterTotal" class="filter-value">0</span>
+                        </div>
+                        <div class="filter-stat">
+                            <span class="filter-label">Avis utilisés :</span>
+                            <span id="filterRelevant" class="filter-value highlight">0</span>
+                        </div>
+                        <div class="filter-stat">
+                            <span class="filter-label">Filtrés :</span>
+                            <span id="filterFiltered" class="filter-value">0</span>
+                        </div>
+                        <div class="filter-stat">
+                            <span class="filter-label">Score moyen :</span>
+                            <span id="filterAvgScore" class="filter-value">0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TODO: Réactiver Product Summary plus tard -->
+                <!-- Product Summary Section -->
+                <!-- <div id="productSummarySection" class="card product-summary" style="display: none;">
+                    <h2><i class="fas fa-file-alt"></i> Résumé Global du Produit</h2>
+                    <div id="productSummaryText" class="summary-text"></div>
+                    
+                    <h3 style="margin-top: 20px;"><i class="fas fa-list-ul"></i> Points Clés</h3>
+                    <ul id="keyPointsList" class="key-points-list"></ul>
+                </div> -->
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="card">
+                        <h2><i class="fas fa-chart-pie"></i> Distribution des sentiments</h2>
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                    
+                    <div class="card">
+                        <h2><i class="fas fa-chart-bar"></i> Sentiments par plateforme</h2>
+                        <canvas id="platformChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- TODO: Réactiver Aspects plus tard -->
+                <!-- Aspects Section -->
+                <!-- <div id="aspectsSection" class="card" style="display: none;">
+                    <h2><i class="fas fa-tags"></i> Aspects populaires</h2>
+                    <div id="aspectsList" class="aspects-list"></div>
+                </div> -->
+
+                <!-- Posts Section -->
+                <div class="card">
+                    <h2><i class="fas fa-list"></i> Posts analysés</h2>
+                    <div id="postsList" class="posts-list"></div>
+                </div>
+            </section>
+
+            <!-- Trends Section (Séparé) -->
+            <section id="trendsSection" class="trends-section" style="display: none;">
+                <div class="card">
+                    <div class="section-header">
+                        <h2><i class="fas fa-chart-line"></i> Tendances Temporelles</h2>
+                        <div class="trend-badge">
+                            <i class="fas fa-robot"></i> Analyse Avancée
+                        </div>
+                    </div>
+                    
+                    <div id="trendsLoadingIndicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Analyse des tendances en cours...</p>
+                    </div>
+                    
+                    <div id="trendsContent" style="display: none;">
+                        <!-- LLM Insight Display Section -->
+                        <div id="llmInsightSection" class="card llm-insight-card" style="display: none;">
+                            <h3><i class="fas fa-brain"></i> 🧠 Résumé LLM des tendances</h3>
+                            
+                            <div id="llmInsightLoading" class="loading-indicator-small" style="display: none;">
+                                <div class="spinner-small"></div>
+                                <p>Génération du résumé LLM en cours...</p>
+                            </div>
+                            
+                            <div id="llmInsightContent" style="display: none;">
+                                <div class="llm-insight-text" id="llmInsightText"></div>
+                                
+                                <div class="llm-stats" id="llmStats">
+                                    <div class="llm-stat">
+                                        <span class="llm-stat-label">Total d'avis :</span>
+                                        <span class="llm-stat-value" id="llmStatTotal">0</span>
+                                    </div>
+                                    <div class="llm-stat">
+                                        <span class="llm-stat-label">Positifs :</span>
+                                        <span class="llm-stat-value positive" id="llmStatPos">0%</span>
+                                    </div>
+                                    <div class="llm-stat">
+                                        <span class="llm-stat-label">Négatifs :</span>
+                                        <span class="llm-stat-value negative" id="llmStatNeg">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="llmInsightError" class="error-message" style="display: none;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span id="llmInsightErrorText"></span>
+                            </div>
+                        </div>
+
+                        <canvas id="trendsChart"></canvas>
+                        
+                        <!-- Popular topics section hidden -->
+                        <div class="popular-topics" style="display: none;">
+                            <h3><i class="fas fa-hashtag"></i> Sujets populaires</h3>
+                            <div id="topicsList" class="topics-list"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="trendsPlaceholder" style="display: block; text-align: center; padding: 40px;">
+                        <i class="fas fa-chart-line" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+                        <p style="color: #666;">Cliquez sur "Analyser les tendances" pour voir l'analyse temporelle détaillée</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Analyseur de Sentiments - Projet Deep Learning</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

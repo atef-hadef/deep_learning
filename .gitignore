@@ -1,0 +1,122 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+
+# Database
+*.db
+*.sqlite3
+*.sql
+
+# Logs
+*.log
+logs/
+app.log
+
+# Cache
+.cache/
+*.cache
+.pytest_cache/
+
+# Models (downloaded from Hugging Face)
+models/
+!models/README.md
+
+# Data
+data/
+!data/.gitkeep
+
+# Test files temporaires
+test_*.py
+check_*.py
+TEST_*.py
+example_usage.py
+test_adaptive_fetch.py
+test_llm_integration.py
+test_opinion_model_debug.py
+
+# Documentation temporaire/redondante
+*_FIX.md
+*_GUIDE.md
+*_SUMMARY.md
+*_README.md
+RÉSUMÉ_*.md
+API_GUIDE.md
+ARCHITECTURE.md
+PAGINATION_*.md
+TRENDS_*.md
+MIGRATION_*.md
+CLEANUP_REPORT.md
+CONTRIBUTING.md
+GITHUB_PUSH_CHECKLIST.md
+LLM_INTEGRATION.md
+QUICKSTART.md
+QUICKSTART_LLM.md
+
+# Fichiers de développement/debug
+database_schema.sql
+run.py
+setup.py
+testapi.py
+
+# TensorBoard logs
+runs/
+tensorboard_logs/
+
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
