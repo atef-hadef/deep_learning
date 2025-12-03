@@ -25,7 +25,8 @@ async def build_trend_insight(
     start_date: str,
     end_date: str,
     platforms: List[str],
-    cached_posts: List[Post] = None
+    cached_posts: List[Post] = None,
+    use_cache_only: bool = False
 ) -> Dict:
     """
     Génère un insight intelligent sur les tendances d'un produit/sujet
@@ -36,7 +37,8 @@ async def build_trend_insight(
         start_date: Date de début au format ISO (ex: "2024-12-01")
         end_date: Date de fin au format ISO (ex: "2024-12-08")
         platforms: Liste des plateformes (["reddit", "twitter"])
-        cached_posts: Posts en cache (fallback si DB non disponible)
+        cached_posts: Posts en cache (UNIQUEMENT posts affichés avec analyse)
+        use_cache_only: Si True, utilise UNIQUEMENT cached_posts (ignore DB)
         
     Returns:
         Dict avec:
@@ -67,14 +69,31 @@ async def build_trend_insight(
             "llm_available": False
         }
 
-    # 2) Récupérer les posts depuis la base de données OU depuis la cache
+    # 2) Récupérer les posts depuis le cache (posts affichés) ou base de données
     start_dt = datetime.fromisoformat(start_date)
     end_dt = datetime.fromisoformat(end_date)
     
     posts = []
     
-    # Essayer PostgreSQL d'abord
-    if await database_service.is_available():
+    # ⚠️ Si use_cache_only=True, utiliser UNIQUEMENT le cache (posts affichés)
+    if use_cache_only:
+        if cached_posts:
+            posts = cached_posts
+            logger.info(f"🎯 Using {len(posts)} CACHED ANALYZED posts (displayed in UI) for LLM")
+        else:
+            logger.warning("⚠️ use_cache_only=True but no cached_posts provided")
+            return {
+                "keyword": keyword,
+                "start_date": start_date,
+                "end_date": end_date,
+                "platforms": platforms,
+                "stats": {},
+                "insight": "Aucun post en cache. Veuillez effectuer une recherche d'abord.",
+                "examples_used": {"positive": [], "negative": []},
+                "llm_available": False
+            }
+    # Sinon, essayer PostgreSQL d'abord
+    elif await database_service.is_available():
         logger.info(f"📊 Fetching posts from PostgreSQL database...")
         posts = await database_service.get_posts_by_keyword_and_date(
             keyword=keyword,

@@ -173,6 +173,40 @@
                     <ul id="keyPointsList" class="key-points-list"></ul>
                 </div> -->
 
+                <!-- LLM Insight Section - Moved to top -->
+                <div id="llmInsightSection" class="card llm-insight-card" style="display: none;">
+                    <h3><i class="fas fa-brain"></i> 🧠 Résumé LLM</h3>
+                    
+                    <div id="llmInsightLoading" class="loading-indicator-small" style="display: none;">
+                        <div class="spinner-small"></div>
+                        <p>Génération du résumé LLM en cours...</p>
+                    </div>
+                    
+                    <div id="llmInsightContent" style="display: none;">
+                        <div class="llm-insight-text" id="llmInsightText"></div>
+                        
+                        <div class="llm-stats" id="llmStats">
+                            <div class="llm-stat">
+                                <span class="llm-stat-label">Total d'avis :</span>
+                                <span class="llm-stat-value" id="llmStatTotal">0</span>
+                            </div>
+                            <div class="llm-stat">
+                                <span class="llm-stat-label">Positifs :</span>
+                                <span class="llm-stat-value positive" id="llmStatPos">0%</span>
+                            </div>
+                            <div class="llm-stat">
+                                <span class="llm-stat-label">Négatifs :</span>
+                                <span class="llm-stat-value negative" id="llmStatNeg">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="llmInsightError" class="error-message" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span id="llmInsightErrorText"></span>
+                    </div>
+                </div>
+
                 <!-- Charts Section -->
                 <div class="charts-section">
                     <div class="card">
@@ -216,40 +250,6 @@
                     </div>
                     
                     <div id="trendsContent" style="display: none;">
-                        <!-- LLM Insight Display Section -->
-                        <div id="llmInsightSection" class="card llm-insight-card" style="display: none;">
-                            <h3><i class="fas fa-brain"></i> 🧠 Résumé LLM des tendances</h3>
-                            
-                            <div id="llmInsightLoading" class="loading-indicator-small" style="display: none;">
-                                <div class="spinner-small"></div>
-                                <p>Génération du résumé LLM en cours...</p>
-                            </div>
-                            
-                            <div id="llmInsightContent" style="display: none;">
-                                <div class="llm-insight-text" id="llmInsightText"></div>
-                                
-                                <div class="llm-stats" id="llmStats">
-                                    <div class="llm-stat">
-                                        <span class="llm-stat-label">Total d'avis :</span>
-                                        <span class="llm-stat-value" id="llmStatTotal">0</span>
-                                    </div>
-                                    <div class="llm-stat">
-                                        <span class="llm-stat-label">Positifs :</span>
-                                        <span class="llm-stat-value positive" id="llmStatPos">0%</span>
-                                    </div>
-                                    <div class="llm-stat">
-                                        <span class="llm-stat-label">Négatifs :</span>
-                                        <span class="llm-stat-value negative" id="llmStatNeg">0%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div id="llmInsightError" class="error-message" style="display: none;">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span id="llmInsightErrorText"></span>
-                            </div>
-                        </div>
-
                         <canvas id="trendsChart"></canvas>
                         
                         <!-- Popular topics section hidden -->

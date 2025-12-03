@@ -3,7 +3,7 @@ from typing import List
 import asyncio
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.schemas.requests import SearchRequest, TrendsRequest
 from app.schemas.responses import (
@@ -147,15 +147,34 @@ async def search_posts(request: SearchRequest):
     product_summary = None
     key_points = []
     
-    # 💾 Sauvegarder dans la cache en mémoire (pour le LLM quand DB non disponible)
+    # 💾 Sauvegarder dans la cache en mémoire (pour le LLM - UNIQUEMENT les posts affichés)
+    # Calculer les dates basées sur time_filter
+    end_date = datetime.utcnow()
+    start_date = end_date
+    
+    if request.time_filter == "hour":
+        start_date = end_date - timedelta(hours=1)
+    elif request.time_filter == "day":
+        start_date = end_date - timedelta(days=1)
+    elif request.time_filter == "week":
+        start_date = end_date - timedelta(days=7)
+    elif request.time_filter == "month":
+        start_date = end_date - timedelta(days=30)
+    elif request.time_filter == "year":
+        start_date = end_date - timedelta(days=365)
+    else:  # "all"
+        start_date = end_date - timedelta(days=365)  # 1 an par défaut
+    
     global _last_search_cache
     _last_search_cache = {
         "keyword": request.keyword,
-        "posts": relevant_posts,
+        "posts": relevant_posts,  # Ce sont les posts AFFICHÉS avec analyse de sentiment
         "timestamp": datetime.utcnow(),
-        "platforms": request.platforms
+        "platforms": request.platforms,
+        "start_date": start_date.isoformat().split('T')[0],
+        "end_date": end_date.isoformat().split('T')[0]
     }
-    logger.info(f"💾 Cached {len(relevant_posts)} posts in memory for LLM insight")
+    logger.info(f"💾 Cached {len(relevant_posts)} ANALYZED posts in memory for LLM insight")
     
     if await database_service.is_available():
         saved_count = await database_service.save_posts(relevant_posts)
@@ -496,14 +515,35 @@ async def get_trend_llm_insight(
     )
     
     try:
-        # Passer la cache en mémoire au service LLM
+        # ⚠️ IMPORTANT: Utiliser UNIQUEMENT le cache (posts affichés dans l'interface)
+        # Ne PAS fetcher depuis la base de données
         global _last_search_cache
+        
+        # Vérifier que le cache existe et correspond au keyword
+        if not _last_search_cache.get("keyword") or _last_search_cache.get("keyword") != keyword:
+            logger.warning(f"⚠️ No cached posts for keyword '{keyword}'. User must perform search first.")
+            return {
+                "keyword": keyword,
+                "start_date": start_date,
+                "end_date": end_date,
+                "platforms": platforms,
+                "stats": {},
+                "insight": "Veuillez d'abord effectuer une recherche pour générer un résumé LLM.",
+                "examples_used": {"positive": [], "negative": []},
+                "llm_available": False,
+                "execution_time": 0
+            }
+        
+        cached_posts = _last_search_cache.get("posts", [])
+        logger.info(f"🤖 Using {len(cached_posts)} CACHED ANALYZED posts for LLM insight (NOT from database)")
+        
         result = await build_trend_insight(
             keyword=keyword,
             start_date=start_date,
             end_date=end_date,
             platforms=platforms,
-            cached_posts=_last_search_cache.get("posts", []) if _last_search_cache.get("keyword") == keyword else []
+            cached_posts=cached_posts,  # Passer les posts du cache
+            use_cache_only=True  # Nouveau flag pour forcer utilisation cache
         )
         
         execution_time = time.time() - start_time

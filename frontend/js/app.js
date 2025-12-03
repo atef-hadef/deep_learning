@@ -1471,18 +1471,10 @@ async function handleLLMInsight() {
     console.log(`🤖 Generating LLM insight for: ${keyword} (${startDateStr} to ${endDateStr})`);
     
     // S'assurer que la section trends est visible
-    const trendsSection = document.getElementById('trendsSection');
-    const trendsContent = document.getElementById('trendsContent');
-    const trendsPlaceholder = document.getElementById('trendsPlaceholder');
-    
-    if (trendsSection) {
-        trendsSection.style.display = 'block';
-    }
-    if (trendsPlaceholder) {
-        trendsPlaceholder.style.display = 'none';
-    }
-    if (trendsContent) {
-        trendsContent.style.display = 'block';
+    // S'assurer que la section results est visible
+    const resultsSection = document.getElementById('resultsSection');
+    if (resultsSection) {
+        resultsSection.style.display = 'block';
     }
     
     // Show LLM insight section with loading

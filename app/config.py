@@ -62,9 +62,9 @@ class Settings(BaseSettings):
     enable_trends_pagination: bool = True  # Activer/désactiver la pagination massive
     trends_max_api_calls: int = 15  # 🔧 Augmenté de 10 à 15 pour multi-sort strategy
     
-    # 🤖 LLM Configuration (OpenRouter API for Grok and others)
-    openrouter_api_key: str = ""  # API key from openrouter.ai
-    openrouter_model: str = "anthropic/claude-3-sonnet"  # Model ID (e.g., grok-model-id)
+    # 🤖 LLM Configuration (Groq API for fast inference)
+    groq_api_key: str = ""  # API key from console.groq.com
+    groq_model: str = "llama-3.3-70b-versatile"  # Model ID: llama-3.3-70b-versatile, llama-3.1-70b-versatile, etc.
     
     class Config:
         env_file = ".env"

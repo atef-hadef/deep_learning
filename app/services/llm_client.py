@@ -1,11 +1,11 @@
 """
-🤖 LLM CLIENT SERVICE - OpenRouter API Integration
+🤖 LLM CLIENT SERVICE - Groq API Integration
 
-Service générique pour appeler des LLM via OpenRouter (Grok, GPT-4, etc.)
+Service générique pour appeler des LLM via Groq (llama-3.3-70b-versatile, etc.)
 
 Author: AI Assistant
 Date: December 2025
-Version: 1.0
+Version: 2.0 - Groq
 """
 
 import logging
@@ -17,18 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 class LLMClient:
-    """Client générique pour appeler des LLM via l'API OpenRouter"""
+    """Client générique pour appeler des LLM via l'API Groq"""
 
     def __init__(self):
         self.settings = get_settings()
-        self.api_url = "https://openrouter.ai/api/v1/chat/completions"
-        self.api_key = getattr(self.settings, "openrouter_api_key", "")
-        self.model = getattr(self.settings, "openrouter_model", "anthropic/claude-3-sonnet")
+        self.api_url = "https://api.groq.com/openai/v1/chat/completions"
+        self.api_key = getattr(self.settings, "groq_api_key", "")
+        self.model = getattr(self.settings, "groq_model", "llama-3.3-70b-versatile")
         
         if not self.api_key:
-            logger.warning("⚠️ OPENROUTER_API_KEY not configured - LLM features will not work")
+            logger.warning("⚠️ GROQ_API_KEY not configured - LLM features will not work")
         else:
-            logger.info(f"✅ LLM Client initialized with model: {self.model}")
+            logger.info(f"✅ LLM Client initialized with Groq model: {self.model}")
 
     def is_available(self) -> bool:
         """Vérifie si le service LLM est disponible"""
@@ -60,15 +60,13 @@ class LLMClient:
         """
         if not self.is_available():
             raise ValueError(
-                "LLM service not available. Please configure OPENROUTER_API_KEY "
-                "and OPENROUTER_MODEL in your .env file"
+                "LLM service not available. Please configure GROQ_API_KEY "
+                "and GROQ_MODEL in your .env file"
             )
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/your-repo",  # Optionnel, pour analytics
-            "X-Title": "Social Media Sentiment Analyzer"      # Optionnel, pour analytics
+            "Content-Type": "application/json"
         }
 
         payload = {
@@ -78,7 +76,7 @@ class LLMClient:
             "max_tokens": max_tokens,
         }
 
-        logger.debug(f"🤖 Calling LLM API: model={self.model}, temp={temperature}, max_tokens={max_tokens}")
+        logger.debug(f"🤖 Calling Groq API: model={self.model}, temp={temperature}, max_tokens={max_tokens}")
         logger.debug(f"📝 Messages: {len(messages)} messages, total chars: {sum(len(m['content']) for m in messages)}")
 
         try:
@@ -95,10 +93,10 @@ class LLMClient:
                 if response.status_code != 200:
                     error_detail = response.text
                     logger.error(
-                        f"❌ OpenRouter API error: {response.status_code} - {error_detail}"
+                        f"❌ Groq API error: {response.status_code} - {error_detail}"
                     )
                     raise httpx.HTTPStatusError(
-                        f"OpenRouter API returned status {response.status_code}: {error_detail}",
+                        f"Groq API returned status {response.status_code}: {error_detail}",
                         request=response.request,
                         response=response
                     )
@@ -108,7 +106,7 @@ class LLMClient:
                 # Extraction du contenu de la réponse
                 if "choices" not in response_data or len(response_data["choices"]) == 0:
                     logger.error(f"❌ Invalid response structure: {response_data}")
-                    raise ValueError("Invalid response from OpenRouter API: no choices")
+                    raise ValueError("Invalid response from Groq API: no choices")
 
                 content = response_data["choices"][0]["message"]["content"]
                 
@@ -125,10 +123,10 @@ class LLMClient:
                 return content
 
         except httpx.TimeoutException:
-            logger.error("⏱️ Timeout while calling OpenRouter API")
+            logger.error("⏱️ Timeout while calling Groq API")
             raise
         except httpx.HTTPError as e:
-            logger.error(f"🌐 HTTP error while calling OpenRouter API: {e}")
+            logger.error(f"🌐 HTTP error while calling Groq API: {e}")
             raise
         except Exception as e:
             logger.error(f"❌ Unexpected error calling LLM: {e}")
